@@ -1,0 +1,24 @@
+{
+  "name": "okta_node_app",
+  "version": "1.0.0",
+  "description": "A nodejs application for user provisioning with okta server using SCIM protocol standards.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swamy526/node_okta_app.git"
+  },
+  "keywords": [
+    "node",
+    "okta",
+    "scim"
+  ],
+  "author": "swamy kurakula",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/swamy526/node_okta_app/issues"
+  },
+  "homepage": "https://github.com/swamy526/node_okta_app#readme"
+}
