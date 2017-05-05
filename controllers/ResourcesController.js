@@ -4,7 +4,8 @@
  *
  */
 
-var appDir = require('path').dirname(require.main.filename);
+const appDir = require('path').dirname(require.main.filename);
+const uuidV1 = require('uuid/v1');
 
 /**
  * API to create user
@@ -14,7 +15,43 @@ var appDir = require('path').dirname(require.main.filename);
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
+    var reqBody = {
+            'userName': '',
+            'active': false,
+            'name': {
+                'givenName': '',
+                'middleName': '',
+                'familyName': ''
+            }
+        },
+        self = {};
 
+    ['userName', 'active'].forEach(a => {
+        self[a] = req.body[a]
+    });
+    ['familyName', 'givenName', 'middleName'].forEach(a => {
+        self[a] = req.body['name'][a]
+    });
+
+    self.id = uuidV1();
+
+    var response = {
+        'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        'id': self.id,
+        'userName': self.userName,
+        'name': {
+            'familyName': self.familyName,
+            'givenName': self.givenName,
+            'middleName': self.middleName,
+        },
+        'active': self.active,
+        'meta': {
+            'resourceType': 'User',
+            'location': `https://${req.hostname}:3000/scim/v2/Users/${self.id}`
+        }
+    };
+
+    res.status(201).json(response);
 };
 
 /**
