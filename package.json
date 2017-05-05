@@ -1,7 +1,7 @@
 {
   "name": "okta_node_app",
   "version": "1.0.0",
-  "description": "A nodejs application for user provisioning with okta server using SCIM protocol standards.",
+  "description": "A nodejs application for user provisioning with okta server using SCIM 2.0 protocol standards.",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
@@ -13,7 +13,7 @@
   "keywords": [
     "node",
     "okta",
-    "scim"
+    "scim2.0"
   ],
   "author": "swamy kurakula",
   "license": "ISC",
