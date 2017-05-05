@@ -4,7 +4,8 @@
   "description": "A nodejs application for user provisioning with okta server using SCIM 2.0 protocol standards.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,10 @@
   "bugs": {
     "url": "https://github.com/swamy526/node_okta_app/issues"
   },
-  "homepage": "https://github.com/swamy526/node_okta_app#readme"
+  "homepage": "https://github.com/swamy526/node_okta_app#readme",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "hogan-express": "^0.5.2"
+  }
 }
