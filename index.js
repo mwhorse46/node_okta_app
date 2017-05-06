@@ -1,25 +1,46 @@
 /**
  * @author swamy Kurakula
  */
-var express = require('express'),
-    app = express(),
-    bodyParser = require('body-parser');
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({'type': 'application/*+json'}));
 
 app.use(function(req, res, next) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', '*');
-  res.setHeader('Access-Control-Allow-Headers', '*');
-  next();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    next();
 });
 
 app.engine('html', require('hogan-express'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
 
+app.get('/', function(req, res) {
+    res.status(200).json({
+        'ack': 'success',
+        'message': 'This is home page..!'
+    });
+});
 app.use('/scim/v2', require('./controllers'));
 
-var server = app.listen(3000, function() {
-  console.log('App running on url at http://localhost:3000');
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+    if (isNaN(port)) {
+        return val;
+    }
+
+    if (port >= 0) {
+        return port;
+    }
+
+    return false;
+};
+
+const port = normalizePort(process.env.PORT || '8080');
+
+const server = app.listen(port, function() {
+    console.log(`App running on url at http://localhost:${port}`);
 });

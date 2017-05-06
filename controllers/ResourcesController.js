@@ -15,22 +15,19 @@ const uuidV1 = require('uuid/v1');
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-    var reqBody = {
-            'userName': '',
-            'active': false,
-            'name': {
-                'givenName': '',
-                'middleName': '',
-                'familyName': ''
-            }
-        },
-        self = {};
+  console.log('------req.query------');
+  console.log(req.query);
+  console.log('------req.body-------');
+  console.log(req.body);
+    var self = {};
+    var reqBody = JSON.parse(req.body);
+    console.log(reqBody);
 
     ['userName', 'active'].forEach(a => {
-        self[a] = req.body[a]
+        self[a] = reqBody[a];
     });
     ['familyName', 'givenName', 'middleName'].forEach(a => {
-        self[a] = req.body['name'][a]
+        self[a] = reqBody['name'][a];
     });
 
     self.id = uuidV1();
@@ -47,7 +44,7 @@ var createUser = function(req, res) {
         'active': self.active,
         'meta': {
             'resourceType': 'User',
-            'location': `https://${req.hostname}:3000/scim/v2/Users/${self.id}`
+            'location': `https://${req.hostname}:8080/scim/v2/Users/${self.id}`
         }
     };
 
