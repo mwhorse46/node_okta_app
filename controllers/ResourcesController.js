@@ -58,7 +58,33 @@ var createUser = function(req, res) {
  * @param {object} res -  response object.
  */
 var getUsers = function(req, res) {
+  const rv = {
+              "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+              "totalResults": '',
+              "startIndex": '',
+              "Resources": []
+            };
 
+  fileUtil.readFile('default.json', function(data){
+    rv["totalResults"] = data.users.length;
+    rv["startIndex"] = 0;
+
+    if(req.query.attributes){
+      var customizedUsers = [];
+      for(var i=0; i < data.users.length; i++){
+        const cu = {};
+        cu.id = data.users[i].id;
+        cu[req.query.attributes] = data.users[i][req.query.attributes];
+        customizedUsers.push(cu);
+      }
+      rv["Resources"] = customizedUsers;
+    } else {
+       rv["Resources"] = data.users;
+    }
+
+    res.status(200).json(rv);
+
+  });
 };
 
 /**
