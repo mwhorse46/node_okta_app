@@ -80,8 +80,14 @@ var getUser = function(req, res) {
       }
     }
 
-    res.status(200).json(u);
-
+    if(Object.keys(u).length)
+      res.status(200).json(u);
+    else
+      res.status(404).json({
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        "detail": "User not found",
+        "status": 404 + ""
+      });
   });
 };
 
