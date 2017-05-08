@@ -5,6 +5,7 @@
  */
 
 const appDir = require('path').dirname(require.main.filename);
+const fileUtil = require(`${appDir}/utils/fileUtil`);
 const uuidV1 = require('uuid/v1');
 
 /**
@@ -15,18 +16,15 @@ const uuidV1 = require('uuid/v1');
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-  console.log('------req.query------');
-  console.log(req.query);
-  console.log('------req.body-------');
-  console.log(req.body);
-    var self = {};
-    var reqBody = JSON.parse(req.body);
+    console.log('req.body');
+    console.log(req.body);
+    let self = {}, reqBody = JSON.parse(JSON.stringify(req.body));
     console.log(reqBody);
 
     ['userName', 'active'].forEach(a => {
         self[a] = reqBody[a];
     });
-    ['familyName', 'givenName', 'middleName'].forEach(a => {
+    ['familyName', 'givenName'].forEach(a => {
         self[a] = reqBody['name'][a];
     });
 
@@ -38,8 +36,7 @@ var createUser = function(req, res) {
         'userName': self.userName,
         'name': {
             'familyName': self.familyName,
-            'givenName': self.givenName,
-            'middleName': self.middleName,
+            'givenName': self.givenName
         },
         'active': self.active,
         'meta': {
@@ -48,7 +45,9 @@ var createUser = function(req, res) {
         }
     };
 
-    res.status(201).json(response);
+    fileUtil.writeFile(''/* filename optional (default.json will be considered as file name)*/, response, function(err){
+      res.status(201).json(response);
+    });
 };
 
 /**
@@ -70,7 +69,20 @@ var getUsers = function(req, res) {
  * @param {object} res -  response object.
  */
 var getUser = function(req, res) {
+  fileUtil.readFile('default.json', function(data){
 
+    var u = {};
+
+    for(var i=0; i < data.users.length; i++){
+      if(data.users[i].id === req.params.user_id) {
+        u = data.users[i];
+        break;
+      }
+    }
+
+    res.status(200).json(u);
+
+  });
 };
 
 /**
