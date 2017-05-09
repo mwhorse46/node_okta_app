@@ -125,7 +125,24 @@ var getUser = function(req, res) {
  * @param {object} res -  response object.
  */
 var updateUser = function(req, res) {
+  fileUtil.readFile('default.json', function(data){
 
+    let foundIndex = -1;
+
+    for(var i=0; i < data.users.length; i++){
+      if(data.users[i].id === req.params.user_id) {
+        Object.keys(data.users[i]).forEach(k => {
+          foundIndex = i;
+          data.users[i][k] = req.body[k];
+        });
+        break;
+      }
+    }
+
+    fileUtil.writeFile(''/* filename optional (default.json will be considered as file name)*/, JSON.stringify(data, null, 2), function(err){
+      res.status(200).json(data.users[foundIndex]);
+    });
+  });
 };
 
 /**
