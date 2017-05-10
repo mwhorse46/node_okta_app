@@ -193,14 +193,20 @@ var deprovisionUser = function(req, res) {
     let schema_patchop = 'urn:ietf:params:scim:api:messages:2.0:PatchOp';
 
     for (let i = 0; i < attributes.length; i++) {
-        if (!patchResource.hasOwnProperty(attributes[i])) {
-            res.status(400).send(`Payload must contain '${attributes[i]}' attribute.`);
-            break;
-        }
+        if (!patchResource.hasOwnProperty(attributes[i]))
+            return res.status(400).send(`Payload must contain '${attributes[i]}' attribute.`);
     }
 
-    if (patchResource['schemas'] == schema_patchop)
-        res.status(501).send("The 'schemas' type in this request is not supported.");
+    let schemaFound = false, schemas = patchResource['schemas'];
+    for(let i = 0; i < schemas.length; i++){
+      if(schemas[i] == schema_patchop){
+        schemaFound = true;
+        break;
+      }
+    }
+
+    if(!schemaFound)
+      return res.status(501).send("The 'schemas' type in this request is not supported.");
 
     fileUtil.readFile('default.json', function(data) {
         var foundIndex = "";
