@@ -26,13 +26,6 @@ module.exports = {
     },
     writeFile: function(fileName, jsonDataToWrite, callback) {
         fileName = fileName || 'default.json';
-        this.readFile(fileName, function(data) {
-            if (jsonDataToWrite) {
-                data.users.push(jsonDataToWrite);
-                fs.writeFile(fileName, JSON.stringify(data, null, 2), 'utf8', callback);
-            } else {
-                callback(null);
-            }
-        });
+        fs.writeFile(fileName, JSON.stringify(jsonDataToWrite, null, 2), 'utf8', callback);
     }
 }

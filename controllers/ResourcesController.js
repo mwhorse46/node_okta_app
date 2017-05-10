@@ -46,8 +46,11 @@ var createUser = function(req, res) {
         }
     };
 
-    fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , response, function(err) {
-        res.status(201).json(response);
+    fileUtil.readFile(fileName, function(data) {
+          data.users.push(response);
+          fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data.users, function(err) {
+              res.status(201).json(response);
+          });
     });
 };
 
@@ -209,7 +212,7 @@ var deprovisionUser = function(req, res) {
       return res.status(501).send("The 'schemas' type in this request is not supported.");
 
     fileUtil.readFile('default.json', function(data) {
-        var foundIndex = "";
+        var foundIndex = -1;
         for (let i = 0; i < data.users.length; i++) {
             if (data.users[i]['id'] == req.params.user_id) {
                 foundIndex = i;
@@ -221,12 +224,15 @@ var deprovisionUser = function(req, res) {
             const operation = patchResource['Operations'][i];
             if (operation.hasOwnProperty('op') && operation['op'] != 'replace')
                 continue;
-            Object.keys(operation['value']).forEach(k => {
-                data.users[foundIndex][k] = operation['value'][k];
-            });
+
+                Object.keys(operation['value']).forEach(k => {
+                    data.users[foundIndex][k] = operation['value'][k];
+                });
         }
 
-        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , JSON.stringify(data, null, 2), function(err) {
+        console.log(JSON.stringify(data, null, 2));
+
+        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
             res.status(200).json(data.users[foundIndex]);
         });
     });
