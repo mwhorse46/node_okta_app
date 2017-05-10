@@ -16,11 +16,11 @@ const uuidV1 = require('uuid/v1');
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-    console.log('req.body');
-    console.log(req.body);
+    //console.log('req.body');
+    //console.log(req.body);
     let self = {},
         reqBody = JSON.parse(JSON.stringify(req.body));
-    console.log(reqBody);
+    //console.log(reqBody);
 
     ['userName', 'active'].forEach(a => {
         self[a] = reqBody[a];
@@ -46,11 +46,11 @@ var createUser = function(req, res) {
         }
     };
 
-    fileUtil.readFile(fileName, function(data) {
-          data.users.push(response);
-          fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data.users, function(err) {
-              res.status(201).json(response);
-          });
+    fileUtil.readFile('default.json', function(data) {
+        data.users.push(response);
+        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data.users, function(err) {
+            res.status(201).json(response);
+        });
     });
 };
 
@@ -177,7 +177,7 @@ var updateUser = function(req, res) {
           document.getElementById('display').innerHtml = JSON.stringify(test, null, 2); */
 
 
-        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , JSON.stringify(data, null, 2), function(err) {
+        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
             res.status(200).json(data.users[foundIndex]);
         });
     });
@@ -200,16 +200,17 @@ var deprovisionUser = function(req, res) {
             return res.status(400).send(`Payload must contain '${attributes[i]}' attribute.`);
     }
 
-    let schemaFound = false, schemas = patchResource['schemas'];
-    for(let i = 0; i < schemas.length; i++){
-      if(schemas[i] == schema_patchop){
-        schemaFound = true;
-        break;
-      }
+    let schemaFound = false,
+        schemas = patchResource['schemas'];
+    for (let i = 0; i < schemas.length; i++) {
+        if (schemas[i] == schema_patchop) {
+            schemaFound = true;
+            break;
+        }
     }
 
-    if(!schemaFound)
-      return res.status(501).send("The 'schemas' type in this request is not supported.");
+    if (!schemaFound)
+        return res.status(501).send("The 'schemas' type in this request is not supported.");
 
     fileUtil.readFile('default.json', function(data) {
         var foundIndex = -1;
@@ -225,12 +226,10 @@ var deprovisionUser = function(req, res) {
             if (operation.hasOwnProperty('op') && operation['op'] != 'replace')
                 continue;
 
-                Object.keys(operation['value']).forEach(k => {
-                    data.users[foundIndex][k] = operation['value'][k];
-                });
+            Object.keys(operation['value']).forEach(k => {
+                data.users[foundIndex][k] = operation['value'][k];
+            });
         }
-
-        console.log(JSON.stringify(data, null, 2));
 
         fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
             res.status(200).json(data.users[foundIndex]);
