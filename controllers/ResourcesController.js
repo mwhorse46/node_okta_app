@@ -223,19 +223,22 @@ var getUser = function(req, res) {
 
     fileUtil.readFile('default.json', function(data) {
 
-        let u = 0;
+        let u = -1;
 
-        for (var i = 0; i < data.users.length; i++) {
+        for (let i = 0; i < data.users.length; i++) {
             if (data.users[i].id === userId) {
                 u = i;
                 break;
             }
         }
 
-        if (u) {
-            res.status(200).json(data.users[u]);
+        if (u !== -1) {
+            u = data.users[u];
+            const scimUserResource = GetSCIMUserResource(userId, u.active, u.userName,
+                u.givenName, u.middleName, u.familyName, req_url);
+            res.status(200).json(scimUserResource);
         } else {
-            var scim_error = SCIMError("User Not Found", "404");
+            const scim_error = SCIMError("User Not Found", "404");
             res.status(404).json(scim_error);
         }
     });
@@ -249,12 +252,16 @@ var getUser = function(req, res) {
  * @param {object} res -  response object.
  */
 var updateUser = function(req, res) {
-    fileUtil.readFile('default.json', function(data) {
+    let userId = req.params.user_id;
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+    let requestBody = JSON.parse(JSON.stringify(req.body));
 
+    fileUtil.readFile('default.json', function(data) {
         let foundIndex = -1;
 
         for (var i = 0; i < data.users.length; i++) {
-            if (data.users[i].id === req.params.user_id) {
+            if (data.users[i].id === userId) {
                 Object.keys(data.users[i]).forEach(k => {
                     foundIndex = i;
                     data.users[i][k] = req.body[k];
@@ -262,6 +269,10 @@ var updateUser = function(req, res) {
                 break;
             }
         }
+
+        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+            res.status(200).json(data.users[foundIndex]);
+        });
 
 
 
@@ -295,11 +306,6 @@ var updateUser = function(req, res) {
           updateObj(test);
           console.log(JSON.stringify(test, null, 2));
           document.getElementById('display').innerHtml = JSON.stringify(test, null, 2); */
-
-
-        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
-            res.status(200).json(data.users[foundIndex]);
-        });
     });
 };
 
