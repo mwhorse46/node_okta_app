@@ -6,6 +6,10 @@ var express = require('express'),
     router = express.Router()
     ResourcesController = require('./ResourcesController');
 
+
+router.get('/', function(req, res){
+  res.send('SCIM');
+});
 /**
  * @swagger
  * /scim/v2/Users:
@@ -75,5 +79,30 @@ router.put('/Users/:user_id', ResourcesController.updateUser);
  *         description: Deprovisioning users by user_id
  */
 router.patch('/Users/:user_id', ResourcesController.deprovisionUser);
+
+/**
+ *  Creates a new Group with given attributes
+ */
+ router.post('/scim/v2/Groups',  ResourcesController.createGroup);
+
+ /**
+  *  Retrieve Groups
+  */
+ router.get('/scim/v2/Groups',  ResourcesController.getGroups);
+
+ /**
+  *  Retrieve a new Group
+  */
+ router.get('/scim/v2/Groups/:group_id',  ResourcesController.getGroup);
+
+ /**
+  *  Update Group membership
+  */
+ router.put('/scim/v2/Groups/:group_id',  ResourcesController.updateGroup);
+
+ /**
+  *  Delete a Group
+  */
+ router.delete('/scim/v2/Groups/:group_id',  ResourcesController.deleteGroup);
 
 module.exports = router;

@@ -8,6 +8,49 @@ const appDir = require('path').dirname(require.main.filename);
 const fileUtil = require(`${appDir}/utils/fileUtil`);
 const uuidV1 = require('uuid/v1');
 
+function GetSCIMUserResource(userResource) {
+
+    var scim_user = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "id": null,
+        "userName": null,
+        "name": {
+            "givenName": null,
+            "middleName": null,
+            "familyName": null,
+        },
+        "active": false,
+        "meta": {
+            "resourceType": "User",
+            "location": null,
+        }
+    };
+
+    scim_user["meta"]["location"] = userResource.req_url;
+    scim_user["id"] = userResource.userId;
+    scim_user["active"] = userResource.active;
+    scim_user["userName"] = userResource.userName;
+    scim_user["name"]["givenName"] = userResource.givenName;
+    scim_user["name"]["middleName"] = userResource.middleName;
+    scim_user["name"]["familyName"] = userResource.familyName;
+
+    return scim_user;
+
+}
+
+function SCIMError(errorMessage, statusCode) {
+    var scim_error = {
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        "detail": null,
+        "status": null
+    }
+
+    scim_error["detail"] = errorMessage;
+    scim_error["status"] = statusCode;
+
+    return scim_error;
+}
+
 /**
  * API to create user
  *
@@ -16,43 +59,87 @@ const uuidV1 = require('uuid/v1');
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-    //console.log('req.body');
-    //console.log(req.body);
-    let self = {},
-        reqBody = JSON.parse(JSON.stringify(req.body));
-    //console.log(reqBody);
+    console.log('req.body');
+    console.log(req.body);
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+    let self = {};
+    let reqBody = JSON.parse(JSON.stringify(req.body));
 
     ['userName', 'active'].forEach(a => {
         self[a] = reqBody[a];
     });
-    ['familyName', 'givenName'].forEach(a => {
+
+    ['familyName', 'givenName', 'middleName'].forEach(a => {
         self[a] = reqBody['name'][a];
     });
 
-    self.id = uuidV1();
+    self.userId = uuidV1();
+    self.req_url = req_url;
 
-    var response = {
-        'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
-        'id': self.id,
-        'userName': self.userName,
-        'name': {
-            'familyName': self.familyName,
-            'givenName': self.givenName
-        },
-        'active': self.active,
-        'meta': {
-            'resourceType': 'User',
-            'location': `https://${req.hostname}:8080/scim/v2/Users/${self.id}`
-        }
-    };
+    var response = GetSCIMUserResource(self);
+    console.log(JSON.stringify(response, null, 2));
 
     fileUtil.readFile('default.json', function(data) {
-        data.users.push(response);
-        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data.users, function(err) {
-            res.status(201).json(response);
-        });
+        let userFound = false;
+        for (let i = 0; i < data.users.length; i++) {
+            const eu = data.users[i];
+            console.log(`eu.userName === ${eu.userName} AND  response.userName  ===  ${response.userName}`);
+            if (eu.userName == response.userName) {
+                userFound = true;
+                break;
+            }
+        }
+        if (!userFound) {
+            data.users.push(response);
+            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data.users, function(err) {
+                if (err) {
+                    const scim_error = SCIMError(err, "400");
+                    return res.staus(400).json(scim_error);
+                }
+                res.status(201).json(response);
+            });
+        } else {
+            const scim_error = SCIMError("Conflict - Resource Already Exists", "409");
+            res.status(409).json(scim_error);
+        }
     });
 };
+
+function GetSCIMList(rows, startIndex, count, req_url) {
+    var scim_resource = {
+        "Resources": [],
+        "itemsPerPage": 0,
+        "schemas": [
+            "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+        ],
+        "startIndex": 0,
+        "totalResults": 0
+    }
+
+    var resources = [];
+    var location = ""
+    for (var i = (startIndex - 1); i < count; i++) {
+        location = req_url + "/" + rows[i]["id"];
+        var userResource = GetSCIMUserResource(
+            rows[i]["id"],
+            rows[i]["active"],
+            rows[i]["userName"],
+            rows[i]["givenName"],
+            rows[i]["middleName"],
+            rows[i]["familyName"],
+            location);
+        resources.push(userResource);
+        location = "";
+    }
+
+    scim_resource["Resources"] = resources;
+    scim_resource["startIndex"] = startIndex;
+    scim_resource["itemsPerPage"] = count;
+    scim_resource["totalResults"] = count;
+
+    return scim_resource;
+}
 
 /**
  * API to get list of Users
@@ -62,31 +149,59 @@ var createUser = function(req, res) {
  * @param {object} res -  response object.
  */
 var getUsers = function(req, res) {
-    const rv = {
-        "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-        "totalResults": '',
-        "startIndex": '',
-        "Resources": []
-    };
+    let url_parts = url.parse(req.url, true);
+    let query = req.query;
+    let startIndex = query["startIndex"];
+    let count = query["count"];
+    let filter = query["filter"];
+    let req_url = url_parts.pathname;
+    let queryAtrribute = "";
+    let queryValue = "";
+
+    if (filter != undefined) {
+        queryAtrribute = String(filter.split("eq")[0]).trim();
+        queryValue = String(filter.split("eq")[1]).trim();
+    }
+
+    /*  const rv = {
+          "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          "totalResults": '',
+          "startIndex": '',
+          "Resources": []
+      }; */
 
     fileUtil.readFile('default.json', function(data) {
-        rv["totalResults"] = data.users.length;
-        rv["startIndex"] = 0;
-
-        if (req.query.attributes) {
-            var customizedUsers = [];
-            for (var i = 0; i < data.users.length; i++) {
-                const cu = {};
-                cu.id = data.users[i].id;
-                cu[req.query.attributes] = data.users[i][req.query.attributes];
-                customizedUsers.push(cu);
+        if (data.users.length && queryAtrribute && queryValue) {
+            let rows = [];
+            for (let i = 0; i < data.users.length; i++) {
+                let user = data.users[i];
+                if (queryAtrribute && queryValue && user[queryAtrribute] == queryValue)
+                    rows.push(rows);
             }
-            rv["Resources"] = customizedUsers;
+            // If requested no. of users is less than all users
+            if (data.users.length < count) {
+                count = data.users.length
+            }
+
+            var scimResource = GetSCIMList(data.users, startIndex, count, req_url);
+            res.status(200).json(scimResource);
+
         } else {
-            rv["Resources"] = data.users;
+            let scim_error = SCIMError("User Not Found", "404");
+            res.status(404).json(scim_error);
         }
 
-        res.status(200).json(rv);
+        /*
+          if (req.query.attributes) {
+              var customizedUsers = [];
+              for (var i = 0; i < data.users.length; i++) {
+                  const cu = {};
+                  cu.id = data.users[i].id;
+                  cu[req.query.attributes] = data.users[i][req.query.attributes];
+                  customizedUsers.push(cu);
+              }
+              rv["Resources"] = customizedUsers;
+          }*/
 
     });
 };
@@ -99,25 +214,30 @@ var getUsers = function(req, res) {
  * @param {object} res -  response object.
  */
 var getUser = function(req, res) {
+    let url_parts = url.parse(req.url, true);
+    let query = req.query;
+    let userId = req.params.user_id;
+    let startIndex = query["startIndex"];
+    let count = query["count"];
+    let req_url = req.url;
+
     fileUtil.readFile('default.json', function(data) {
 
-        var u = {};
+        let u = 0;
 
         for (var i = 0; i < data.users.length; i++) {
-            if (data.users[i].id === req.params.user_id) {
-                u = data.users[i];
+            if (data.users[i].id === userId) {
+                u = i;
                 break;
             }
         }
 
-        if (Object.keys(u).length)
-            res.status(200).json(u);
-        else
-            res.status(404).json({
-                "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                "detail": "User not found",
-                "status": 404 + ""
-            });
+        if (u) {
+            res.status(200).json(data.users[u]);
+        } else {
+            var scim_error = SCIMError("User Not Found", "404");
+            res.status(404).json(scim_error);
+        }
     });
 };
 
@@ -237,6 +357,70 @@ var deprovisionUser = function(req, res) {
     });
 };
 
+
+/**
+ *  Groups
+ */
+
+var createGroup = function(req, res) {
+    let groupId = req.params.group_id;
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+
+    let scim_error = SCIMError("Not implented", "400");
+    res.writeHead(400, {
+        'Content-Type': 'application/text'
+    });
+    res.end(JSON.stringify(scim_error));
+};
+
+var getGroup = function(req, res) {
+    let groupId = req.params.group_id;
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+
+    let scim_error = SCIMError("Not implented", "400");
+    res.writeHead(400, {
+        'Content-Type': 'application/text'
+    });
+    res.end(JSON.stringify(scim_error));
+}
+
+var getGroups = function(req, res) {
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+
+    let scim_error = SCIMError("Not implented", "400");
+    res.writeHead(400, {
+        'Content-Type': 'application/text'
+    });
+    res.end(JSON.stringify(scim_error));
+}
+
+var updateGroup = function(req, res) {
+    let groupId = req.params.group_id;
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+
+    let scim_error = SCIMError("Not implented", "400");
+    res.writeHead(400, {
+        'Content-Type': 'application/text'
+    });
+    res.end(JSON.stringify(scim_error));
+}
+
+var deleteGroup = function(req, res) {
+    let groupId = req.params.group_id;
+    let url_parts = url.parse(req.url, true);
+    let req_url = url_parts.pathname;
+
+    let scim_error = SCIMError("Not implented", "400");
+    res.writeHead(400, {
+        'Content-Type': 'application/text'
+    });
+    res.end(JSON.stringify(scim_error));
+}
+
 /**
  *
  *  Exporting ResourcesController module
@@ -247,5 +431,10 @@ module.exports = {
     "getUsers": getUsers,
     "getUser": getUser,
     "updateUser": updateUser,
-    "deprovisionUser": deprovisionUser
+    "deprovisionUser": deprovisionUser,
+    "createGroup": createGroup,
+    "getGroup": getGroup,
+    "updateGroup": updateGroup,
+    "deleteGroup": deleteGroup,
+    "getGroups": getGroups
 }
