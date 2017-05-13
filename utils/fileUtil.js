@@ -15,10 +15,6 @@ module.exports = {
                     data = {};
                     data.users = [];
                 }
-                if (data == null){
-                  data = {};
-                  data.users = [];
-                }
 
                 callback(data);
             }

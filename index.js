@@ -5,20 +5,10 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 
-app.use(bodyParser.json({'type': 'application/*+json'}));
-
-/*app.use(function(req, res, next){
-   if(req.get('Accept') == 'application/scim+json; charset=utf-8'){
-     var data = "";
-     req.on('data', function(chunk){ data += chunk})
-     req.on('end', function(){
-         req.body = data;
-         next();
-     })
-   } else {
-     next();
-   }
-}); */
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,6 +22,7 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
 
 app.get('/', function(req, res) {
+    console.log('/');
     res.status(200).json({
         'ack': 'success',
         'message': 'This is home page..!'

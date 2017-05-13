@@ -8,6 +8,7 @@ var express = require('express'),
 
 
 router.get('/', function(req, res){
+  console.log('/');
   res.send('SCIM');
 });
 /**

@@ -7,6 +7,7 @@
 const appDir = require('path').dirname(require.main.filename);
 const fileUtil = require(`${appDir}/utils/fileUtil`);
 const uuidV1 = require('uuid/v1');
+const url = require('url');
 
 function GetSCIMUserResource(userResource) {
 
@@ -20,6 +21,8 @@ function GetSCIMUserResource(userResource) {
             "familyName": null,
         },
         "active": false,
+        "emails": [],
+        "displayName": null,
         "meta": {
             "resourceType": "User",
             "location": null,
@@ -30,9 +33,11 @@ function GetSCIMUserResource(userResource) {
     scim_user["id"] = userResource.userId;
     scim_user["active"] = userResource.active;
     scim_user["userName"] = userResource.userName;
+    scim_user["displayName"] = userResource.displayName;
     scim_user["name"]["givenName"] = userResource.givenName;
     scim_user["name"]["middleName"] = userResource.middleName;
     scim_user["name"]["familyName"] = userResource.familyName;
+    scim_user["emails"] = userResource.emails;
 
     return scim_user;
 
@@ -59,14 +64,12 @@ function SCIMError(errorMessage, statusCode) {
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-    console.log('req.body');
-    console.log(req.body);
     let url_parts = url.parse(req.url, true);
     let req_url = url_parts.pathname;
     let self = {};
     let reqBody = JSON.parse(JSON.stringify(req.body));
 
-    ['userName', 'active'].forEach(a => {
+    ['userName', 'active', 'displayName', 'emails'].forEach(a => {
         self[a] = reqBody[a];
     });
 
@@ -78,13 +81,11 @@ var createUser = function(req, res) {
     self.req_url = req_url;
 
     var response = GetSCIMUserResource(self);
-    console.log(JSON.stringify(response, null, 2));
 
     fileUtil.readFile('default.json', function(data) {
         let userFound = false;
         for (let i = 0; i < data.users.length; i++) {
             const eu = data.users[i];
-            console.log(`eu.userName === ${eu.userName} AND  response.userName  ===  ${response.userName}`);
             if (eu.userName == response.userName) {
                 userFound = true;
                 break;
@@ -92,7 +93,7 @@ var createUser = function(req, res) {
         }
         if (!userFound) {
             data.users.push(response);
-            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data.users, function(err) {
+            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
                 if (err) {
                     const scim_error = SCIMError(err, "400");
                     return res.staus(400).json(scim_error);
@@ -107,7 +108,7 @@ var createUser = function(req, res) {
 };
 
 function GetSCIMList(rows, startIndex, count, req_url) {
-    var scim_resource = {
+    const scim_resource = {
         "Resources": [],
         "itemsPerPage": 0,
         "schemas": [
@@ -117,20 +118,25 @@ function GetSCIMList(rows, startIndex, count, req_url) {
         "totalResults": 0
     }
 
-    var resources = [];
-    var location = ""
-    for (var i = (startIndex - 1); i < count; i++) {
-        location = req_url + "/" + rows[i]["id"];
-        var userResource = GetSCIMUserResource(
-            rows[i]["id"],
-            rows[i]["active"],
-            rows[i]["userName"],
-            rows[i]["givenName"],
-            rows[i]["middleName"],
-            rows[i]["familyName"],
-            location);
-        resources.push(userResource);
-        location = "";
+    const resources = [];
+    let location = ""
+    if(startIndex){
+      for (let i = (startIndex - 1); i < count; i++) {
+          location = req_url + "/" + rows[i]["id"];
+          let userResource = GetSCIMUserResource({
+            "userId": rows[i]["id"],
+            "active": rows[i]["active"],
+            "userName": rows[i]["userName"],
+            "displayName": rows[i]["displayName"],
+            "givenName": rows[i]["name"]["givenName"],
+            "middleName": rows[i]["name"]["middleName"],
+            "familyName": rows[i]["name"]["familyName"],
+            "emails": rows[i]["emails"],
+            "req_url": location
+          });
+          resources.push(userResource);
+          location = "";
+      }
     }
 
     scim_resource["Resources"] = resources;
@@ -151,8 +157,8 @@ function GetSCIMList(rows, startIndex, count, req_url) {
 var getUsers = function(req, res) {
     let url_parts = url.parse(req.url, true);
     let query = req.query;
-    let startIndex = query["startIndex"];
-    let count = query["count"];
+    let startIndex = query["startIndex"] || 0;
+    let count = query["count"] || 0;
     let filter = query["filter"];
     let req_url = url_parts.pathname;
     let queryAtrribute = "";
@@ -163,27 +169,25 @@ var getUsers = function(req, res) {
         queryValue = String(filter.split("eq")[1]).trim();
     }
 
-    /*  const rv = {
-          "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-          "totalResults": '',
-          "startIndex": '',
-          "Resources": []
-      }; */
-
     fileUtil.readFile('default.json', function(data) {
-        if (data.users.length && queryAtrribute && queryValue) {
+        if (data && data.users.length) {
             let rows = [];
             for (let i = 0; i < data.users.length; i++) {
                 let user = data.users[i];
-                if (queryAtrribute && queryValue && user[queryAtrribute] == queryValue)
+                if (queryAtrribute && queryValue){
+                  if(user[queryAtrribute] == queryValue)
                     rows.push(rows);
+                } else {
+                  rows = data.users;
+                  break;
+                }
             }
             // If requested no. of users is less than all users
-            if (data.users.length < count) {
-                count = data.users.length
+            if (rows.length < count) {
+                count = rows.length
             }
 
-            var scimResource = GetSCIMList(data.users, startIndex, count, req_url);
+            var scimResource = GetSCIMList(rows, startIndex, count, req_url);
             res.status(200).json(scimResource);
 
         } else {
@@ -222,7 +226,6 @@ var getUser = function(req, res) {
     let req_url = req.url;
 
     fileUtil.readFile('default.json', function(data) {
-
         let u = -1;
 
         for (let i = 0; i < data.users.length; i++) {
@@ -234,9 +237,9 @@ var getUser = function(req, res) {
 
         if (u !== -1) {
             u = data.users[u];
-            const scimUserResource = GetSCIMUserResource(userId, u.active, u.userName,
-                u.givenName, u.middleName, u.familyName, req_url);
-            res.status(200).json(scimUserResource);
+            /*const scimUserResource = GetSCIMUserResource({userId, active: u.active, userName: u.userName,
+                givenName: u.givenName, middleName: u.middleName, familyName: u.familyName, req_url}); */
+            res.status(200).json(u);
         } else {
             const scim_error = SCIMError("User Not Found", "404");
             res.status(404).json(scim_error);
