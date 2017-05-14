@@ -22,21 +22,21 @@ const error = require(`${appDir}/models/SCIMError`);
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-    let url_parts = url.parse(req.url, true);
-    let req_url = url_parts.pathname;
     let self = {};
-    let reqBody = JSON.parse(JSON.stringify(req.body));
+    let reqBody = req.body;
 
-    ['userName', 'active', 'displayName', 'emails'].forEach(a => {
-        self[a] = reqBody[a];
-    });
-
-    ['familyName', 'givenName', 'middleName'].forEach(a => {
-        self[a] = reqBody['name'][a];
+    ['userName', 'active', 'displayName', 'emails', 'name'].forEach(a => {
+        if (a == 'name') {
+            ['familyName', 'givenName', 'middleName'].forEach(na => {
+                self[na] = reqBody[a][na];
+            });
+        } else {
+            self[a] = reqBody[a];
+        }
     });
 
     self.userId = uuidV1();
-    self.req_url = req_url;
+    self.req_url = req.url;
 
     var response = user.GetSCIMUserResource(self);
 
