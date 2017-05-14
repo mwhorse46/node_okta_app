@@ -124,23 +124,23 @@ function GetSCIMList(rows, startIndex, count, req_url) {
 
     const resources = [];
     let location = ""
-    if(startIndex){
-      for (let i = (startIndex - 1); i < count; i++) {
-          location = req_url + "/" + rows[i]["id"];
-          let userResource = GetSCIMUserResource({
-            "userId": rows[i]["id"],
-            "active": rows[i]["active"],
-            "userName": rows[i]["userName"],
-            "displayName": rows[i]["displayName"],
-            "givenName": rows[i]["name"]["givenName"],
-            "middleName": rows[i]["name"]["middleName"],
-            "familyName": rows[i]["name"]["familyName"],
-            "emails": rows[i]["emails"],
-            "req_url": location
-          });
-          resources.push(userResource);
-          location = "";
-      }
+    if (startIndex) {
+        for (let i = (startIndex - 1); i < count; i++) {
+            location = req_url + "/" + rows[i]["id"];
+            let userResource = GetSCIMUserResource({
+                "userId": rows[i]["id"],
+                "active": rows[i]["active"],
+                "userName": rows[i]["userName"],
+                "displayName": rows[i]["displayName"],
+                "givenName": rows[i]["name"]["givenName"],
+                "middleName": rows[i]["name"]["middleName"],
+                "familyName": rows[i]["name"]["familyName"],
+                "emails": rows[i]["emails"],
+                "req_url": location
+            });
+            resources.push(userResource);
+            location = "";
+        }
     }
 
     scim_resource["Resources"] = resources;
@@ -178,12 +178,12 @@ var getUsers = function(req, res) {
             let rows = [];
             for (let i = 0; i < data.users.length; i++) {
                 let user = data.users[i];
-                if (queryAtrribute && queryValue){
-                  if(user[queryAtrribute] == queryValue)
-                    rows.push(rows);
+                if (queryAtrribute && queryValue) {
+                    if (user[queryAtrribute] == queryValue)
+                        rows.push(rows);
                 } else {
-                  rows = data.users;
-                  break;
+                    rows = data.users;
+                    break;
                 }
             }
             // If requested no. of users is less than all users
@@ -374,6 +374,28 @@ var deprovisionUser = function(req, res) {
 /**
  *  Groups
  */
+
+function GetSCIMGroupResource(groupResource) {
+
+    var scim_group = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+        "id": null,
+        "displayName": null,
+        "members": [],
+        "meta": {
+            "resourceType": "Group",
+            "location": null,
+        }
+    };
+
+    scim_group["meta"]["location"] = groupResource.req_url;
+    scim_group["id"] = groupResource.groupId;
+    scim_group["displayName"] = groupResource.displayName;
+    scim_group["members"] = groupResource.members;
+
+    return scim_group;
+
+}
 
 var createGroup = function(req, res) {
     let groupId = req.params.group_id;
