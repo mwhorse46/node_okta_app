@@ -44,7 +44,7 @@ function GetSCIMUserResource(userResource) {
 }
 
 function SCIMError(errorMessage, statusCode) {
-    var scim_error = {
+    let scim_error = {
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
         "detail": null,
         "status": null
@@ -64,10 +64,6 @@ function SCIMError(errorMessage, statusCode) {
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
-    //console.log('req.get(Content-Type)');
-    //console.log(req.get('Content-Type'));
-    //console.log('req.body');
-    //console.log(req.body);
     let url_parts = url.parse(req.url, true);
     let req_url = url_parts.pathname;
     let self = {};
@@ -123,7 +119,7 @@ function GetSCIMList(rows, startIndex, count, req_url) {
     }
 
     const resources = [];
-    let location = ""
+    let location = "";
     if (startIndex) {
         for (let i = (startIndex - 1); i < count; i++) {
             location = req_url + "/" + rows[i]["id"];
@@ -159,45 +155,38 @@ function GetSCIMList(rows, startIndex, count, req_url) {
  * @param {object} res -  response object.
  */
 var getUsers = function(req, res) {
-    let url_parts = url.parse(req.url, true);
-    let query = req.query;
-    let startIndex = query["startIndex"] || 0;
-    let count = query["count"] || 0;
-    let filter = query["filter"];
-    let req_url = url_parts.pathname;
+    let startIndex = req.query["startIndex"] || 0;
+    let count = req.query["count"] || 0;
+    let filter = req.query["filter"] || '';
     let queryAtrribute = "";
     let queryValue = "";
 
-    if (filter != undefined) {
+    if (filter) {
         queryAtrribute = String(filter.split("eq")[0]).trim();
         queryValue = String(filter.split("eq")[1]).trim();
     }
 
     fileUtil.readFile('default.json', function(data) {
-        if (data && data.users.length) {
-            let rows = [];
-            for (let i = 0; i < data.users.length; i++) {
-                let user = data.users[i];
-                if (queryAtrribute && queryValue) {
-                    if (user[queryAtrribute] == queryValue)
-                        rows.push(rows);
-                } else {
-                    rows = data.users;
-                    break;
-                }
-            }
-            // If requested no. of users is less than all users
-            if (rows.length < count) {
-                count = rows.length
-            }
+        if (!data.users) data.users = [];
 
-            var scimResource = GetSCIMList(rows, startIndex, count, req_url);
-            res.status(200).json(scimResource);
-
-        } else {
-            let scim_error = SCIMError("User Not Found", "404");
-            res.status(404).json(scim_error);
+        let rows = [];
+        for (let i = 0; i < data.users.length; i++) {
+            let user = data.users[i];
+            if (queryAtrribute && queryValue) {
+                if (user[queryAtrribute] == queryValue)
+                    rows.push(rows);
+            } else {
+                rows = data.users;
+                break;
+            }
         }
+        // If requested no. of users is less than all users
+        if (rows.length < count) {
+            count = rows.length
+        }
+
+        var scimResource = GetSCIMList(rows, startIndex, count, req.url);
+        res.status(200).json(scimResource);
 
         /*
           if (req.query.attributes) {
@@ -260,9 +249,8 @@ var getUser = function(req, res) {
  */
 var updateUser = function(req, res) {
     let userId = req.params.user_id;
-    let url_parts = url.parse(req.url, true);
-    let req_url = url_parts.pathname;
-    let requestBody = JSON.parse(JSON.stringify(req.body));
+    let req_url = req.url;
+    let requestBody = req.body;
 
     fileUtil.readFile('default.json', function(data) {
         let foundIndex = -1;
@@ -365,28 +353,21 @@ function GetSCIMGroupResource(groupResource) {
 }
 
 var createGroup = function(req, res) {
-    console.log('Group req.get(Content-Type)');
-    console.log(req.get('Content-Type'));
-    console.log('Group req.body');
-    console.log(req.body);
-    let url_parts = url.parse(req.url, true);
-    let req_url = url_parts.pathname;
     let self = {};
-    let reqBody = JSON.parse(JSON.stringify(req.body));
+    let reqBody = req.body;
 
     ['members', 'displayName'].forEach(a => {
         self[a] = reqBody[a];
     });
 
     self.groupId = uuidV1();
-    self.req_url = req_url;
+    self.req_url = req.url;
 
     var response = GetSCIMGroupResource(self);
 
     fileUtil.readFile('default.json', function(data) {
-        if (!data.groups) {
-            data.groups = [];
-        }
+        if (!data.groups) data.groups = [];
+
         let groupFound = false;
         for (let i = 0; i < data.groups.length; i++) {
             const eu = data.groups[i];
@@ -413,24 +394,14 @@ var createGroup = function(req, res) {
 };
 
 var getGroup = function(req, res) {
-    console.log(getGroup);
     let groupId = req.params.group_id;
-    let query = req.query;
-    let url_parts = url.parse(req.url, true);
-    let startIndex = query["startIndex"];
-    let count = query["count"];
-    let req_url = req.url;
-
-    console.log(`req_url   ${req_url}`);
-    console.log(`url_parts   ${url_parts}`);
-    console.log(`groupId   ${groupId}`);
-    console.log(`query   ${JSON.stringify(query, null, 2)}`);
+    let startIndex = req.query["startIndex"] || 0;
+    let count = req.query["count"] || 0;
 
     fileUtil.readFile('default.json', function(data) {
-        if(!data.groups) data.groups = [];
+        if (!data.groups) data.groups = [];
         let groupIndex = -1;
 
-        console.log(data.groups.length);
         for (let i = 0; i < data.groups.length; i++) {
             if (data.groups[i].id === groupId) {
                 groupIndex = i;
@@ -440,7 +411,7 @@ var getGroup = function(req, res) {
 
         if (groupIndex !== -1) {
             /*groupIndex = data.groups[u];
-            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req_url}); */
+            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req.url}); */
             res.status(200).json(data.groups[groupIndex]);
         } else {
             const scim_error = SCIMError("Group Not Found", "404");
@@ -450,34 +421,32 @@ var getGroup = function(req, res) {
 }
 
 var getGroups = function(req, res) {
-    let url_parts = url.parse(req.url, true);
-    let req_url = url_parts.pathname;
+    let startIndex = req.query["startIndex"] || 0;
+    let count = req.query["count"] || 0;
+    let req_url = (url.parse(req.url, true)).pathname;
 
-    let scim_error = SCIMError("Not implented", "400");
-    res.status(400).json(scim_error);
+    fileUtil.readFile('default.json', function(data) {
+        if (!data.groups) data.groups = [];
+
+        if (data.groups.length < count) count = rows.length;
+        var scimResource = GetSCIMList(data.groups, startIndex, count, req_url);
+        res.status(200).json(scimResource);
+    });
+
 }
 
 var updateGroup = function(req, res) {
-    console.log('updateGroup');
-    console.log('req.body');
-    console.log(req.body);
     let groupId = req.params.group_id;
-    let url_parts = url.parse(req.url, true);
-    let req_url = url_parts.pathname;
-    let reqBody = JSON.parse(JSON.stringify(req.body));
-
-    console.log(`req_url   ${req_url}`);
-    console.log(`url_parts   ${JSON.stringify(url_parts, null, 2)}`);
-    console.log(`groupId   ${groupId}`);
+    let reqBody = req.body;
 
     fileUtil.readFile('default.json', function(data) {
-        if(!data.groups) data.groups = [];
+        if (!data.groups) data.groups = [];
         let groupIndex = -1;
 
-        console.log(data.groups.length);
         for (let i = 0; i < data.groups.length; i++) {
             if (data.groups[i].id === groupId) {
                 groupIndex = i;
+                data.groups[i]["displayName"] = reqBody["displayName"];
                 data.groups[i]["members"] = reqBody["members"];
                 break;
             }
@@ -485,11 +454,11 @@ var updateGroup = function(req, res) {
 
         if (groupIndex !== -1) {
             /*groupIndex = data.groups[u];
-            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req_url}); */
+            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req.url}); */
             fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
                 if (err) {
                     const scim_error = SCIMError(err, "400");
-                    return res.staus(400).json(scim_error);
+                    return res.status(400).json(scim_error);
                 }
                 res.status(200).json(data.groups[groupIndex]);
             });
@@ -505,8 +474,33 @@ var deleteGroup = function(req, res) {
     let url_parts = url.parse(req.url, true);
     let req_url = url_parts.pathname;
 
-    let scim_error = SCIMError("Not implented", "400");
-    res.status(400).json(scim_error);
+    fileUtil.readFile('default.json', function(data) {
+        if (!data.groups) data.groups = [];
+        let groupFound = false;
+
+        for (let i = 0; i < data.groups.length; i++) {
+            if (data.groups[i].id === groupId) {
+                groupFound = true;
+                data.groups.splice(i, 1);
+                break;
+            }
+        }
+
+        if (groupFound) {
+            /*groupIndex = data.groups[u];
+            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req_url}); */
+            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+                if (err) {
+                    const scim_error = SCIMError(err, "400");
+                    return res.status(400).json(scim_error);
+                }
+                res.status(204).end();
+            });
+        } else {
+            const scim_error = SCIMError(`Group ${groupId} Not Found`, "404");
+            res.status(404).json(scim_error);
+        }
+    });
 }
 
 /**
