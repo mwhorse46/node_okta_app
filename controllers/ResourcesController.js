@@ -11,7 +11,7 @@ const url = require('url');
 
 function GetSCIMUserResource(userResource) {
 
-    var scim_user = {
+    let scim_user = {
         "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
         "id": null,
         "userName": null,
@@ -280,39 +280,6 @@ var updateUser = function(req, res) {
         fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
             res.status(200).json(data.users[foundIndex]);
         });
-
-
-
-
-        /*  var test = {
-              "schemas": [
-                  "urn:ietf:params:scim:schemas:core:2.0:User"
-              ],
-              "id": "1352d620-33e6-11e7-b22e-97b96073c3e8",
-              "userName": "durga526",
-              "name": {
-                  "familyName": "kurakula",
-                  "givenName": "durga"
-              },
-              "active": true,
-              "meta": {
-                  "resourceType": "User",
-                  "location": "https://localhost:8080/scim/v2/Users/1352d620-33e6-11e7-b22e-97b96073c3e8"
-              }
-          };
-
-          function updateObj(obj) {
-              Object.keys(obj).forEach(k => {
-                  if (typeof obj[k] == 'object' || typeof obj[k] == 'array')
-                      updateObj(obj[k]);
-                  else
-                      obj[k] = obj[k] + ' --22--';
-              });
-          }
-
-          updateObj(test);
-          console.log(JSON.stringify(test, null, 2));
-          document.getElementById('display').innerHtml = JSON.stringify(test, null, 2); */
     });
 };
 
@@ -377,7 +344,7 @@ var deprovisionUser = function(req, res) {
 
 function GetSCIMGroupResource(groupResource) {
 
-    var scim_group = {
+    let scim_group = {
         "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
         "id": null,
         "displayName": null,
@@ -398,27 +365,88 @@ function GetSCIMGroupResource(groupResource) {
 }
 
 var createGroup = function(req, res) {
-    let groupId = req.params.group_id;
+    console.log('Group req.get(Content-Type)');
+    console.log(req.get('Content-Type'));
+    console.log('Group req.body');
+    console.log(req.body);
     let url_parts = url.parse(req.url, true);
     let req_url = url_parts.pathname;
+    let self = {};
+    let reqBody = JSON.parse(JSON.stringify(req.body));
 
-    let scim_error = SCIMError("Not implented", "400");
-    res.writeHead(400, {
-        'Content-Type': 'application/text'
+    ['members', 'displayName'].forEach(a => {
+        self[a] = reqBody[a];
     });
-    res.end(JSON.stringify(scim_error));
+
+    self.groupId = uuidV1();
+    self.req_url = req_url;
+
+    var response = GetSCIMGroupResource(self);
+
+    fileUtil.readFile('default.json', function(data) {
+        if (!data.groups) {
+            data.groups = [];
+        }
+        let groupFound = false;
+        for (let i = 0; i < data.groups.length; i++) {
+            const eu = data.groups[i];
+            if (eu.displayName == response.displayName) {
+                groupFound = true;
+                break;
+            }
+        }
+        if (!groupFound) {
+            data.groups.push(response);
+            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+                if (err) {
+                    const scim_error = SCIMError(err, "400");
+                    return res.staus(400).json(scim_error);
+                }
+                res.status(201).json(response);
+            });
+        } else {
+            const scim_error = SCIMError("Conflict - Resource Already Exists", "409");
+            res.status(409).json(scim_error);
+        }
+    });
+
 };
 
 var getGroup = function(req, res) {
+    console.log(getGroup);
     let groupId = req.params.group_id;
+    let query = req.query;
     let url_parts = url.parse(req.url, true);
-    let req_url = url_parts.pathname;
+    let startIndex = query["startIndex"];
+    let count = query["count"];
+    let req_url = req.url;
 
-    let scim_error = SCIMError("Not implented", "400");
-    res.writeHead(400, {
-        'Content-Type': 'application/text'
+    console.log(`req_url   ${req_url}`);
+    console.log(`url_parts   ${url_parts}`);
+    console.log(`groupId   ${groupId}`);
+    console.log(`query   ${JSON.stringify(query, null, 2)}`);
+
+    fileUtil.readFile('default.json', function(data) {
+        if(!data.groups) data.groups = [];
+        let groupIndex = -1;
+
+        console.log(data.groups.length);
+        for (let i = 0; i < data.groups.length; i++) {
+            if (data.groups[i].id === groupId) {
+                groupIndex = i;
+                break;
+            }
+        }
+
+        if (groupIndex !== -1) {
+            /*groupIndex = data.groups[u];
+            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req_url}); */
+            res.status(200).json(data.groups[groupIndex]);
+        } else {
+            const scim_error = SCIMError("Group Not Found", "404");
+            res.status(404).json(scim_error);
+        }
     });
-    res.end(JSON.stringify(scim_error));
 }
 
 var getGroups = function(req, res) {
@@ -426,22 +454,50 @@ var getGroups = function(req, res) {
     let req_url = url_parts.pathname;
 
     let scim_error = SCIMError("Not implented", "400");
-    res.writeHead(400, {
-        'Content-Type': 'application/text'
-    });
-    res.end(JSON.stringify(scim_error));
+    res.status(400).json(scim_error);
 }
 
 var updateGroup = function(req, res) {
+    console.log('updateGroup');
+    console.log('req.body');
+    console.log(req.body);
     let groupId = req.params.group_id;
     let url_parts = url.parse(req.url, true);
     let req_url = url_parts.pathname;
+    let reqBody = JSON.parse(JSON.stringify(req.body));
 
-    let scim_error = SCIMError("Not implented", "400");
-    res.writeHead(400, {
-        'Content-Type': 'application/text'
+    console.log(`req_url   ${req_url}`);
+    console.log(`url_parts   ${JSON.stringify(url_parts, null, 2)}`);
+    console.log(`groupId   ${groupId}`);
+
+    fileUtil.readFile('default.json', function(data) {
+        if(!data.groups) data.groups = [];
+        let groupIndex = -1;
+
+        console.log(data.groups.length);
+        for (let i = 0; i < data.groups.length; i++) {
+            if (data.groups[i].id === groupId) {
+                groupIndex = i;
+                data.groups[i]["members"] = reqBody["members"];
+                break;
+            }
+        }
+
+        if (groupIndex !== -1) {
+            /*groupIndex = data.groups[u];
+            const scimGroupResource = GetSCIMGroupResource({groupId, members, displayName, req_url}); */
+            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+                if (err) {
+                    const scim_error = SCIMError(err, "400");
+                    return res.staus(400).json(scim_error);
+                }
+                res.status(200).json(data.groups[groupIndex]);
+            });
+        } else {
+            const scim_error = SCIMError("Group Not Found", "404");
+            res.status(404).json(scim_error);
+        }
     });
-    res.end(JSON.stringify(scim_error));
 }
 
 var deleteGroup = function(req, res) {
@@ -450,10 +506,7 @@ var deleteGroup = function(req, res) {
     let req_url = url_parts.pathname;
 
     let scim_error = SCIMError("Not implented", "400");
-    res.writeHead(400, {
-        'Content-Type': 'application/text'
-    });
-    res.end(JSON.stringify(scim_error));
+    res.status(400).json(scim_error);
 }
 
 /**

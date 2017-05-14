@@ -83,26 +83,26 @@ router.patch('/Users/:user_id', ResourcesController.deprovisionUser);
 /**
  *  Creates a new Group with given attributes
  */
- router.post('/scim/v2/Groups',  ResourcesController.createGroup);
+ router.post('/Groups',  ResourcesController.createGroup);
 
  /**
   *  Retrieve Groups
   */
- router.get('/scim/v2/Groups',  ResourcesController.getGroups);
+ router.get('/Groups',  ResourcesController.getGroups);
 
  /**
   *  Retrieve a new Group
   */
- router.get('/scim/v2/Groups/:group_id',  ResourcesController.getGroup);
+ router.get('/Groups/:group_id',  ResourcesController.getGroup);
 
  /**
   *  Update Group membership
   */
- router.put('/scim/v2/Groups/:group_id',  ResourcesController.updateGroup);
+ router.put('/Groups/:group_id',  ResourcesController.updateGroup);
 
  /**
   *  Delete a Group
   */
- router.delete('/scim/v2/Groups/:group_id',  ResourcesController.deleteGroup);
+ router.delete('/Groups/:group_id',  ResourcesController.deleteGroup);
 
 module.exports = router;
