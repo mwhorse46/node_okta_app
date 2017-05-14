@@ -64,6 +64,10 @@ function SCIMError(errorMessage, statusCode) {
  * @param {object} res -  response object.
  */
 var createUser = function(req, res) {
+    //console.log('req.get(Content-Type)');
+    //console.log(req.get('Content-Type'));
+    //console.log('req.body');
+    //console.log(req.body);
     let url_parts = url.parse(req.url, true);
     let req_url = url_parts.pathname;
     let self = {};

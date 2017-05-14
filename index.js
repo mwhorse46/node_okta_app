@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({
     extended: true
 }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({type: 'application/scim+json'}));
 
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
