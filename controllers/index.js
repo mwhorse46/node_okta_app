@@ -4,11 +4,11 @@
 
 var express = require('express'),
     router = express.Router()
-    ResourcesController = require('./ResourcesController');
+ResourcesController = require('./ResourcesController');
 
 
-router.get('/', function(req, res){
-  res.send('SCIM');
+router.get('/', function(req, res) {
+    res.send('SCIM');
 });
 /**
  * @swagger
@@ -80,29 +80,84 @@ router.put('/Users/:user_id', ResourcesController.updateUser);
  */
 router.patch('/Users/:user_id', ResourcesController.deprovisionUser);
 
+
 /**
- *  Creates a new Group with given attributes
+ * @swagger
+ * /scim/v2/Groups:
+ *   post:
+ *     description: Creates a new Group with given attributes
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description:
  */
- router.post('/Groups',  ResourcesController.createGroup);
+router.post('/Groups', ResourcesController.createGroup);
 
- /**
-  *  Retrieve Groups
-  */
- router.get('/Groups',  ResourcesController.getGroups);
+/**
+ * @swagger
+ * /scim/v2/Groups:
+ *   get:
+ *     description: Retrieve Groups
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description:
+ */
+router.get('/Groups', ResourcesController.getGroups);
 
- /**
-  *  Retrieve a new Group
-  */
- router.get('/Groups/:group_id',  ResourcesController.getGroup);
+/**
+ * @swagger
+ * /scim/v2/Groups/{group_id}:
+ *   get:
+ *     description: Retrieve a new Group
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description:
+ */
+router.get('/Groups/:group_id', ResourcesController.getGroup);
 
- /**
-  *  Update Group membership
-  */
- router.put('/Groups/:group_id',  ResourcesController.updateGroup);
+/**
+ * @swagger
+ * /scim/v2/Groups/{group_id}:
+ *   put:
+ *     description: Update Group membership
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description:
+ */
+router.put('/Groups/:group_id', ResourcesController.updateGroup);
 
- /**
-  *  Delete a Group
-  */
- router.delete('/Groups/:group_id',  ResourcesController.deleteGroup);
+/**
+ * @swagger
+ * /scim/v2/Groups/{group_id}:
+ *   delete:
+ *     description: Delete a Group
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: group_id
+ *         description:
+ *         in: path
+ *         required: true
+ *          type: string
+ *     responses:
+ *       204:
+ *         description:
+ *       404:
+ *         description: Group {group_id} Not Found
+ *       400:
+ *         description:
+ */
+router.delete('/Groups/:group_id', ResourcesController.deleteGroup);
 
 module.exports = router;

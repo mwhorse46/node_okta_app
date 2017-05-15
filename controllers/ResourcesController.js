@@ -132,20 +132,19 @@ var getUser = function(req, res) {
     let userId = req.params.user_id;
 
     fileUtil.readFile('default.json', function(data) {
-        let u = -1;
+        let foundIndex = -1;
 
         for (let i = 0; i < data.users.length; i++) {
             if (data.users[i].id == userId) {
-                u = i;
+                foundIndex = i;
                 break;
             }
         }
 
-        if (u !== -1) {
-            u = data.users[u];
+        if (foundIndex !== -1) {
             /*const scimUserResource = user.GetSCIMUserResource({userId, active: u.active, userName: u.userName,
                 givenName: u.givenName, middleName: u.middleName, familyName: u.familyName, location: u.meta.location}); */
-            res.status(200).json(u);
+            res.status(200).json(data.users[foundIndex]);
         } else {
             const scim_error = error.SCIMError("User Not Found", "404");
             res.status(404).json(scim_error);
@@ -162,25 +161,33 @@ var getUser = function(req, res) {
  */
 var updateUser = function(req, res) {
     let userId = req.params.user_id;
-    let req_url = req.url;
-    let requestBody = req.body;
+    let reqBody = req.body;
 
     fileUtil.readFile('default.json', function(data) {
         let foundIndex = -1;
 
         for (var i = 0; i < data.users.length; i++) {
             if (data.users[i].id === userId) {
-                Object.keys(data.users[i]).forEach(k => {
+                Object.keys(reqBody).forEach(k => {
                     foundIndex = i;
-                    data.users[i][k] = req.body[k];
+                    data.users[i][k] = reqBody[k];
                 });
                 break;
             }
         }
 
-        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
-            res.status(200).json(data.users[foundIndex]);
-        });
+        if (foundIndex !== -1) {
+            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+                if (err) {
+                    const scim_error = error.SCIMError(String(err), "404");
+                    res.status(404).json(scim_error);
+                }
+                res.status(200).json(data.users[foundIndex]);
+            });
+        } else {
+            const scim_error = error.SCIMError("User Not Found", "404");
+            res.status(404).json(scim_error);
+        }
     });
 };
 

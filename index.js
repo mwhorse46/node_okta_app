@@ -8,7 +8,9 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({
     extended: true
 }));
-app.use(bodyParser.json({type: 'application/scim+json'}));
+app.use(bodyParser.json({
+    type: 'application/scim+json'
+}));
 
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -48,3 +50,22 @@ const port = normalizePort(process.env.PORT || '8080');
 const server = app.listen(port, function() {
     console.log(`App running on url at http://localhost:${port}`);
 });
+
+/*var options = {
+    swaggerDefinition: {
+        info: {
+            title: 'SCIM 2.0 Server API',
+            version: '1.0.0',
+        },
+    },
+    apis: ['./controllers/index.js']
+};
+
+var swaggerJSDoc = require('swagger-jsdoc');
+var swaggerSpec = swaggerJSDoc(options);
+console.log(swaggerSpec);
+
+app.get('/api-docs.json', function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(swaggerSpec, null, 2));
+}); */
