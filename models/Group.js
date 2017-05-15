@@ -1,5 +1,10 @@
-exports.GetSCIMGroupResource = function(groupResource) {
-    let scim_group = {
+exports.GetSCIMGroupResource = function({
+    groupId,
+    displayName,
+    members,
+    req_url
+}) {
+    const scim_group = {
         "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
         "id": null,
         "displayName": null,
@@ -10,10 +15,10 @@ exports.GetSCIMGroupResource = function(groupResource) {
         }
     };
 
-    scim_group["meta"]["location"] = groupResource.req_url;
-    scim_group["id"] = groupResource.groupId;
-    scim_group["displayName"] = groupResource.displayName;
-    scim_group["members"] = groupResource.members;
+    scim_group["id"] = groupId;
+    scim_group["displayName"] = displayName;
+    scim_group["members"] = members;
+    scim_group["meta"]["location"] = req_url;
 
     return scim_group;
 }

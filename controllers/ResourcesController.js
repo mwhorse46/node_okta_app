@@ -13,6 +13,7 @@ const ulist = require(`${appDir}/models/UserListResponse`);
 const group = require(`${appDir}/models/Group`);
 const glist = require(`${appDir}/models/GroupListResponse`);
 const error = require(`${appDir}/models/SCIMError`);
+const has = Object.prototype.hasOwnProperty;
 
 /**
  * API to create user
@@ -21,12 +22,12 @@ const error = require(`${appDir}/models/SCIMError`);
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-var createUser = function(req, res) {
-    let self = {};
-    let reqBody = req.body;
+const createUser = function(req, res) {
+    const self = {};
+    const reqBody = req.body;
 
     ['userName', 'active', 'displayName', 'emails', 'name'].forEach(a => {
-        if (a == 'name') {
+        if (a == 'name' && reqBody[a]) {
             ['familyName', 'givenName', 'middleName'].forEach(na => {
                 self[na] = reqBody[a][na];
             });
@@ -72,10 +73,10 @@ var createUser = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-var getUsers = function(req, res) {
-    let startIndex = req.query["startIndex"] || 0;
+const getUsers = function(req, res) {
+    const startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
-    let filter = req.query["filter"] || '';
+    const filter = req.query["filter"] || '';
     let queryAtrribute = "";
     let queryValue = "";
 
@@ -88,16 +89,20 @@ var getUsers = function(req, res) {
         if (!data.users) data.users = [];
 
         let rows = [];
-        for (let i = 0; i < data.users.length; i++) {
-            const user = data.users[i];
-            if (queryAtrribute && queryValue) {
-                if (user[queryAtrribute] == queryValue)
-                    rows.push(user);
-            } else {
-                rows = data.users;
-                break;
+        if (queryAtrribute && queryValue) {
+            for (let i = 0; i < data.users.length; i++) {
+                const user = data.users[i];
+                if (user[queryAtrribute] == queryValue) rows.push(user);
+
+                if (!rows.length && user[queryAtrribute] && (user[queryAtrribute]).toUpperCase() == queryValue.toUpperCase()) {
+                    const scim_error = error.SCIMError("Username is case sensitive", "400");
+                    return res.status(400).json(scim_error);
+                }
             }
+        } else {
+            rows = [...data.users];
         }
+
         // If requested no. of users is less than all users
         if (rows.length < count) {
             count = rows.length
@@ -128,7 +133,7 @@ var getUsers = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-var getUser = function(req, res) {
+const getUser = function(req, res) {
     let userId = req.params.user_id;
 
     fileUtil.readFile('default.json', function(data) {
@@ -159,7 +164,7 @@ var getUser = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-var updateUser = function(req, res) {
+const updateUser = function(req, res) {
     let userId = req.params.user_id;
     let reqBody = req.body;
 
@@ -179,8 +184,8 @@ var updateUser = function(req, res) {
         if (foundIndex !== -1) {
             fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
                 if (err) {
-                    const scim_error = error.SCIMError(String(err), "404");
-                    res.status(404).json(scim_error);
+                    const scim_error = error.SCIMError(String(err), "400");
+                    return res.status(400).json(scim_error);
                 }
                 res.status(200).json(data.users[foundIndex]);
             });
@@ -198,13 +203,13 @@ var updateUser = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-var deprovisionUser = function(req, res) {
+const deprovisionUser = function(req, res) {
     let patchResource = req.body;
     let attributes = ['schemas', 'Operations'];
     let schema_patchop = 'urn:ietf:params:scim:api:messages:2.0:PatchOp';
 
     for (let i = 0; i < attributes.length; i++) {
-        if (!patchResource.hasOwnProperty(attributes[i])) {
+        if (!has.call(patchResource, attributes[i])) {
             const scim_error = error.SCIMError(`Payload must contain '${attributes[i]}' attribute.`, "400");
             return res.status(400).json(scim_error);
         }
@@ -228,7 +233,7 @@ var deprovisionUser = function(req, res) {
 
         for (let i = 0; i < (patchResource['Operations']).length; i++) {
             const operation = patchResource['Operations'][i];
-            if (operation.hasOwnProperty('op') && operation['op'] != 'replace')
+            if (has.call(operation, 'op') && operation['op'] != 'replace')
                 continue;
 
             Object.keys(operation['value']).forEach(k => {
@@ -247,7 +252,7 @@ var deprovisionUser = function(req, res) {
  *  Groups
  */
 
-var createGroup = function(req, res) {
+const createGroup = function(req, res) {
     let self = {};
     let reqBody = req.body;
 
@@ -288,7 +293,7 @@ var createGroup = function(req, res) {
 
 };
 
-var getGroup = function(req, res) {
+const getGroup = function(req, res) {
     let groupId = req.params.group_id;
     let startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
@@ -315,7 +320,7 @@ var getGroup = function(req, res) {
     });
 }
 
-var getGroups = function(req, res) {
+const getGroups = function(req, res) {
     let startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
     let req_url = (url.parse(req.url, true)).pathname;
@@ -330,7 +335,7 @@ var getGroups = function(req, res) {
 
 }
 
-var updateGroup = function(req, res) {
+const updateGroup = function(req, res) {
     let groupId = req.params.group_id;
     let reqBody = req.body;
 
@@ -364,7 +369,7 @@ var updateGroup = function(req, res) {
     });
 }
 
-var deleteGroup = function(req, res) {
+const deleteGroup = function(req, res) {
     let groupId = req.params.group_id;
 
     fileUtil.readFile('default.json', function(data) {
@@ -400,6 +405,18 @@ var deleteGroup = function(req, res) {
  *
  */
 module.exports = {
+    createUser,
+    getUsers,
+    getUser,
+    updateUser,
+    deprovisionUser,
+    createGroup,
+    getGroup,
+    updateGroup,
+    deleteGroup,
+    getGroups
+};
+/*{
     "createUser": createUser,
     "getUsers": getUsers,
     "getUser": getUser,
@@ -410,4 +427,4 @@ module.exports = {
     "updateGroup": updateGroup,
     "deleteGroup": deleteGroup,
     "getGroups": getGroups
-};
+}; */

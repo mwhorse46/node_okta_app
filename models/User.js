@@ -1,5 +1,15 @@
-exports.GetSCIMUserResource = function(userResource) {
-    let scim_user = {
+exports.GetSCIMUserResource = function({
+    userId,
+    displayName,
+    active,
+    userName,
+    givenName,
+    middleName,
+    familyName,
+    emails,
+    req_url
+}) {
+    const scim_user = {
         "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
         "id": null,
         "userName": null,
@@ -17,15 +27,15 @@ exports.GetSCIMUserResource = function(userResource) {
         }
     };
 
-    scim_user["meta"]["location"] = userResource.req_url;
-    scim_user["id"] = userResource.userId;
-    scim_user["active"] = userResource.active;
-    scim_user["userName"] = userResource.userName;
-    scim_user["displayName"] = userResource.displayName;
-    scim_user["name"]["givenName"] = userResource.givenName;
-    scim_user["name"]["middleName"] = userResource.middleName;
-    scim_user["name"]["familyName"] = userResource.familyName;
-    scim_user["emails"] = userResource.emails;
+    scim_user["meta"]["location"] = req_url;
+    scim_user["id"] = userId;
+    scim_user["active"] = active;
+    scim_user["userName"] = userName;
+    scim_user["displayName"] = displayName;
+    scim_user["name"]["givenName"] = givenName;
+    scim_user["name"]["middleName"] = middleName;
+    scim_user["name"]["familyName"] = familyName;
+    scim_user["emails"] = emails;
 
     return scim_user;
 

@@ -1,5 +1,5 @@
 exports.SCIMError = function(errorMessage, statusCode) {
-    let scim_error = {
+    const scim_error = {
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
         "detail": null,
         "status": null

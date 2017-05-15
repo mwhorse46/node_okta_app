@@ -2,9 +2,9 @@
  * @author swamy kurakula
  */
 
-var express = require('express'),
-    router = express.Router()
-ResourcesController = require('./ResourcesController');
+const express = require('express');
+const router = express.Router();
+const ResourcesController = require('./ResourcesController');
 
 
 router.get('/', function(req, res) {
