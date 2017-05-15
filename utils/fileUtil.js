@@ -1,7 +1,11 @@
 const fs = require('fs');
 const appDir = require('path').dirname(require.main.filename);
 const constants = require(`${appDir}/constants`);
-const fileName = `${appDir}/db/${constants.fileName}` || `${appDir}/db/default.json`;
+const dir = `${appDir}/db`;
+
+if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+const fileName = `${dir}/${constants.fileName}` || `${dir}/default.json`;
 
 module.exports = {
     fileName,
