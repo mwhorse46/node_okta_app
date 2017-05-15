@@ -416,15 +416,3 @@ module.exports = {
     deleteGroup,
     getGroups
 };
-/*{
-    "createUser": createUser,
-    "getUsers": getUsers,
-    "getUser": getUser,
-    "updateUser": updateUser,
-    "deprovisionUser": deprovisionUser,
-    "createGroup": createGroup,
-    "getGroup": getGroup,
-    "updateGroup": updateGroup,
-    "deleteGroup": deleteGroup,
-    "getGroups": getGroups
-}; */
