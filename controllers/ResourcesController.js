@@ -41,7 +41,7 @@ const createUser = function(req, res) {
 
     var response = user.GetSCIMUserResource(self);
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         let userFound = false;
         for (let i = 0; i < data.users.length; i++) {
             const eu = data.users[i];
@@ -52,10 +52,10 @@ const createUser = function(req, res) {
         }
         if (!userFound) {
             data.users.push(response);
-            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+            fileUtil.writeFile(data, function(err) {
                 if (err) {
                     const scim_error = error.SCIMError(err, "400");
-                    return res.staus(400).json(scim_error);
+                    return res.status(400).json(scim_error);
                 }
                 res.status(201).json(response);
             });
@@ -85,7 +85,7 @@ const getUsers = function(req, res) {
         queryValue = (String(filter.split("eq")[1]).trim()).replace(/["]+/g, '');
     }
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         if (!data.users) data.users = [];
 
         let rows = [];
@@ -136,7 +136,7 @@ const getUsers = function(req, res) {
 const getUser = function(req, res) {
     let userId = req.params.user_id;
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         let foundIndex = -1;
 
         for (let i = 0; i < data.users.length; i++) {
@@ -168,7 +168,7 @@ const updateUser = function(req, res) {
     let userId = req.params.user_id;
     let reqBody = req.body;
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         let foundIndex = -1;
 
         for (var i = 0; i < data.users.length; i++) {
@@ -182,7 +182,7 @@ const updateUser = function(req, res) {
         }
 
         if (foundIndex !== -1) {
-            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+            fileUtil.writeFile(data, function(err) {
                 if (err) {
                     const scim_error = error.SCIMError(String(err), "400");
                     return res.status(400).json(scim_error);
@@ -222,7 +222,7 @@ const deprovisionUser = function(req, res) {
         }
     }
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         var foundIndex = -1;
         for (let i = 0; i < data.users.length; i++) {
             if (data.users[i]['id'] == req.params.user_id) {
@@ -241,7 +241,7 @@ const deprovisionUser = function(req, res) {
             });
         }
 
-        fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+        fileUtil.writeFile(data, function(err) {
             res.status(200).json(data.users[foundIndex]);
         });
     });
@@ -265,7 +265,7 @@ const createGroup = function(req, res) {
 
     var response = group.GetSCIMGroupResource(self);
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         if (!data.groups) data.groups = [];
 
         let groupFound = false;
@@ -278,10 +278,10 @@ const createGroup = function(req, res) {
         }
         if (!groupFound) {
             data.groups.push(response);
-            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+            fileUtil.writeFile(data, function(err) {
                 if (err) {
                     const scim_error = error.SCIMError(err, "400");
-                    return res.staus(400).json(scim_error);
+                    return res.status(400).json(scim_error);
                 }
                 res.status(201).json(response);
             });
@@ -298,7 +298,7 @@ const getGroup = function(req, res) {
     let startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         if (!data.groups) data.groups = [];
         let groupIndex = -1;
 
@@ -325,7 +325,7 @@ const getGroups = function(req, res) {
     let count = req.query["count"] || 0;
     let req_url = (url.parse(req.url, true)).pathname;
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         if (!data.groups) data.groups = [];
 
         if (data.groups.length < count) count = rows.length;
@@ -339,7 +339,7 @@ const updateGroup = function(req, res) {
     let groupId = req.params.group_id;
     let reqBody = req.body;
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         if (!data.groups) data.groups = [];
         let groupIndex = -1;
 
@@ -355,7 +355,7 @@ const updateGroup = function(req, res) {
         if (groupIndex !== -1) {
             /*groupIndex = data.groups[u];
             const scimGroupResource = group.GetSCIMGroupResource({groupId, members, displayName, req.url}); */
-            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+            fileUtil.writeFile(data, function(err) {
                 if (err) {
                     const scim_error = error.SCIMError(err, "400");
                     return res.status(400).json(scim_error);
@@ -372,7 +372,7 @@ const updateGroup = function(req, res) {
 const deleteGroup = function(req, res) {
     let groupId = req.params.group_id;
 
-    fileUtil.readFile('default.json', function(data) {
+    fileUtil.readFile(function(data) {
         if (!data.groups) data.groups = [];
         let groupFound = false;
 
@@ -385,7 +385,7 @@ const deleteGroup = function(req, res) {
         }
 
         if (groupFound) {
-            fileUtil.writeFile('' /* filename optional (default.json will be considered as file name)*/ , data, function(err) {
+            fileUtil.writeFile(data, function(err) {
                 if (err) {
                     const scim_error = error.SCIMError(err, "400");
                     return res.status(400).json(scim_error);

@@ -1,8 +1,12 @@
-var fs = require('fs');
+const fs = require('fs');
+const appDir = require('path').dirname(require.main.filename);
+const constants = require(`${appDir}/constants`);
+const fileName = `${appDir}/db/${constants.fileName}` || `${appDir}/db/default.json`;
 
 module.exports = {
-    readFile: function(fileName, callback) {
-        fs.readFile(fileName, 'utf8', function readFileCallback(err, data) {
+    fileName,
+    readFile: function(callback) {
+        fs.readFile(this.fileName, 'utf8', function readFileCallback(err, data) {
             if (err) {
                 data = {};
                 data.users = [];
@@ -10,8 +14,7 @@ module.exports = {
             } else {
                 try {
                     data = JSON.parse(data);
-                }
-                catch (err) {
+                } catch (err) {
                     data = {};
                     data.users = [];
                 }
@@ -20,8 +23,7 @@ module.exports = {
             }
         });
     },
-    writeFile: function(fileName, jsonDataToWrite, callback) {
-        fileName = fileName || 'default.json';
-        fs.writeFile(fileName, JSON.stringify(jsonDataToWrite, null, 2), 'utf8', callback);
+    writeFile: function(jsonDataToWrite, callback) {
+        fs.writeFile(this.fileName, JSON.stringify(jsonDataToWrite, null, 2), 'utf8', callback);
     }
 }
