@@ -10,6 +10,49 @@ const ResourcesController = require('./ResourcesController');
 router.get('/', function(req, res) {
     res.send('SCIM');
 });
+
+/**
+ * @swagger
+ * /scim/v2/ServiceProviderConfig:
+ *   get:
+ *     description: fetches service provider configuration
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description:
+ */
+router.get('/ServiceProviderConfig', ResourcesController.getServiceProviderCfg);
+
+/**
+ * @swagger
+ * /scim/v2/Schemas:
+ *   get:
+ *     description: list of different resource schemas.
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description:
+ */
+router.get('/Schemas', ResourcesController.getSchemas);
+
+/**
+ * @swagger
+ * /scim/v2/Users:
+ *   post:
+ *     description: Create User
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description: createUser
+ */
+router.get('/Schemas', ResourcesController.getSchemas);
+
 /**
  * @swagger
  * /scim/v2/Users:
@@ -79,7 +122,6 @@ router.put('/Users/:user_id', ResourcesController.updateUser);
  *         description: Deprovisioning users by user_id
  */
 router.patch('/Users/:user_id', ResourcesController.deprovisionUser);
-
 
 /**
  * @swagger

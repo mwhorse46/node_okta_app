@@ -399,6 +399,20 @@ let deleteGroup = function(req, res) {
     });
 }
 
+
+let getSchemas = function(req, res) {
+    let startIndex = req.query["startIndex"] || 0;
+    let count = req.query["count"] || 0;
+
+    const scim_error = error.SCIMError("Not Implemented", "501");
+    return res.status(501).json(scim_error);
+}
+
+let getServiceProviderCfg = function(req, res) {
+    const scim_error = error.SCIMError("Not Implemented", "501");
+    return res.status(501).json(scim_error);
+}
+
 /**
  *
  *  Exporting ResourcesController module
@@ -414,5 +428,7 @@ module.exports = {
     getGroup,
     updateGroup,
     deleteGroup,
-    getGroups
+    getGroups,
+    getSchemas,
+    getServiceProviderCfg
 };
