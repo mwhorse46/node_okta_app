@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "schemas": [
+        "urn:ietf:params:scim:schemas:core:2.0:User"
+      ],
+      "id": "f9135290-3966-11e7-a449-cd2043afa6d6",
+      "userName": "Runscope196Jntuurali648@atko.com",
+      "name": {
+        "givenName": "Runscope196",
+        "familyName": "Jntuurali648"
+      },
+      "active": true,
+      "emails": [
+        {
+          "primary": true,
+          "value": "Runscope196Jntuurali648@atko.com",
+          "type": "work"
+        }
+      ],
+      "displayName": "Runscope196 Jntuurali648",
+      "meta": {
+        "resourceType": "User",
+        "location": "/Users"
+      }
+    }
+  ]
+}

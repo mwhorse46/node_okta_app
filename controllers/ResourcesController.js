@@ -22,7 +22,7 @@ const has = Object.prototype.hasOwnProperty;
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-const createUser = function(req, res) {
+let createUser = function(req, res) {
     const self = {};
     const reqBody = req.body;
 
@@ -39,7 +39,7 @@ const createUser = function(req, res) {
     self.userId = uuidV1();
     self.req_url = req.url;
 
-    var response = user.GetSCIMUserResource(self);
+    const response = user.GetSCIMUserResource(self);
 
     fileUtil.readFile(function(data) {
         let userFound = false;
@@ -73,7 +73,7 @@ const createUser = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-const getUsers = function(req, res) {
+let getUsers = function(req, res) {
     const startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
     const filter = req.query["filter"] || '';
@@ -133,7 +133,7 @@ const getUsers = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-const getUser = function(req, res) {
+let getUser = function(req, res) {
     let userId = req.params.user_id;
 
     fileUtil.readFile(function(data) {
@@ -164,7 +164,7 @@ const getUser = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-const updateUser = function(req, res) {
+let updateUser = function(req, res) {
     let userId = req.params.user_id;
     let reqBody = req.body;
 
@@ -203,7 +203,7 @@ const updateUser = function(req, res) {
  * @param {object} req -  request object.
  * @param {object} res -  response object.
  */
-const deprovisionUser = function(req, res) {
+let deprovisionUser = function(req, res) {
     let patchResource = req.body;
     let attributes = ['schemas', 'Operations'];
     let schema_patchop = 'urn:ietf:params:scim:api:messages:2.0:PatchOp';
@@ -252,7 +252,7 @@ const deprovisionUser = function(req, res) {
  *  Groups
  */
 
-const createGroup = function(req, res) {
+let createGroup = function(req, res) {
     let self = {};
     let reqBody = req.body;
 
@@ -293,7 +293,7 @@ const createGroup = function(req, res) {
 
 };
 
-const getGroup = function(req, res) {
+let getGroup = function(req, res) {
     let groupId = req.params.group_id;
     let startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
@@ -320,7 +320,7 @@ const getGroup = function(req, res) {
     });
 }
 
-const getGroups = function(req, res) {
+let getGroups = function(req, res) {
     let startIndex = req.query["startIndex"] || 0;
     let count = req.query["count"] || 0;
     let req_url = (url.parse(req.url, true)).pathname;
@@ -335,7 +335,7 @@ const getGroups = function(req, res) {
 
 }
 
-const updateGroup = function(req, res) {
+let updateGroup = function(req, res) {
     let groupId = req.params.group_id;
     let reqBody = req.body;
 
@@ -369,7 +369,7 @@ const updateGroup = function(req, res) {
     });
 }
 
-const deleteGroup = function(req, res) {
+let deleteGroup = function(req, res) {
     let groupId = req.params.group_id;
 
     fileUtil.readFile(function(data) {

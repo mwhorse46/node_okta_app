@@ -5,9 +5,6 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
 app.use(bodyParser.json({
     type: 'application/scim+json'
 }));
@@ -24,16 +21,16 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
 
 app.get('/', function(req, res) {
-    console.log('/');
     res.status(200).json({
         'ack': 'success',
         'message': 'This is home page..!'
     });
 });
+
 app.use('/scim/v2', require('./controllers'));
 
 function normalizePort(val) {
-    var port = parseInt(val, 10);
+    const port = parseInt(val, 10);
     if (isNaN(port)) {
         return val;
     }
