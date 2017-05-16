@@ -51,20 +51,6 @@ router.get('/Schemas', ResourcesController.getSchemas);
  *       200:
  *         description: createUser
  */
-router.get('/Schemas', ResourcesController.getSchemas);
-
-/**
- * @swagger
- * /scim/v2/Users:
- *   post:
- *     description: Create User
- *     produces:
- *       - application/json
- *     parameters:
- *     responses:
- *       200:
- *         description: createUser
- */
 router.post('/Users', ResourcesController.createUser);
 
 /**
