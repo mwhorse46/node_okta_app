@@ -4,11 +4,23 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const auth = require('./auth');
+const path = require('path');
+const session = require('express-session');
 
 app.use(bodyParser.json({
     type: 'application/scim+json'
 }));
-
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(session({
+    secret: "saml text okta app",
+    resave: true,
+    saveUninitialized: true
+}));
+app.use(auth.initialize());
+app.use(auth.session());
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', '*');
@@ -20,14 +32,42 @@ app.engine('html', require('hogan-express'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
 
-app.get('/', function(req, res) {
+/*app.get('/', function(req, res) {
     res.status(200).json({
         'ack': 'success',
         'message': 'This is home page..!'
     });
-});
+});*/
 
 app.use('/scim/v2', require('./controllers'));
+
+//Get Methods
+app.get('/', auth.protected, function(req, res) {
+    res.sendFile(`${__dirname}/index.html`);
+});
+
+app.get('/home', auth.protected, function(req, res) {
+    res.sendFile(`${__dirname}/index.html`);
+});
+
+//auth.authenticate check if you are logged in
+app.get('/login', auth.authenticate('saml', {
+    failureRedirect: '/',
+    failureFlash: true
+}), function(req, res) {
+    res.redirect('/');
+});
+
+//POST Methods, redirect to home successful login
+app.post('/login', auth.authenticate('saml', {
+    failureRedirect: '/',
+    failureFlash: true
+}), function(req, res) {
+    res.redirect('/home');
+});
+
+//code for importing static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 function normalizePort(val) {
     const port = parseInt(val, 10);

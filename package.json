@@ -25,7 +25,10 @@
   "dependencies": {
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
+    "express-session": "^1.15.3",
     "hogan-express": "^0.5.2",
+    "passport": "^0.3.2",
+    "passport-saml": "^0.15.0",
     "uuid": "^3.0.1"
   }
 }
