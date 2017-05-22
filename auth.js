@@ -1,6 +1,6 @@
 const passport = require('passport');
 const SamlStrategy = require('passport-saml').Strategy;
-const config = require('./config.json')[process.env.NODE_ENV || 'custom'];
+const config = require('./config.json')['custom'];//process.env.NODE_ENV || 
 
 //users array to hold
 const users = [];
