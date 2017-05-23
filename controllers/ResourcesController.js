@@ -328,7 +328,7 @@ let getGroups = function(req, res) {
     fileUtil.readFile(function(data) {
         if (!data.groups) data.groups = [];
 
-        if (data.groups.length < count) count = rows.length;
+        if (data.groups.length < count) count = data.groups.length;
         var scimResource = glist.GetSCIMList(data.groups, startIndex, count, req_url);
         res.status(200).json(scimResource);
     });
@@ -348,6 +348,16 @@ let updateGroup = function(req, res) {
                 groupIndex = i;
                 data.groups[i]["displayName"] = reqBody["displayName"];
                 data.groups[i]["members"] = reqBody["members"];
+                /*for(let j=0, members = (reqBody["members"]), memberFound = false; j< members.length; j++){
+                  (data.groups[i]["members"]).forEach(member => {
+                    console.log('member.value1 == ' + member.value);
+                    console.log('member.value2 == ' + members[j].value);
+                    console.log(member.value == members[j].value);
+                    if(member.value == members[j].value)  return memberFound = true;
+                  });
+                  console.log('memberFound == ' + memberFound);
+                  if(!memberFound) (data.groups[i]["members"]).push(members[j]);
+                } */
                 break;
             }
         }

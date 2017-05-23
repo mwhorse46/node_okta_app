@@ -1,6 +1,6 @@
 const passport = require('passport');
 const SamlStrategy = require('passport-saml').Strategy;
-const config = require('./config.json')['custom'];//process.env.NODE_ENV || 
+const config = require('./config.json')['custom'];//process.env.NODE_ENV ||
 
 //users array to hold
 const users = [];
@@ -19,10 +19,12 @@ function findByEmail(email, fn) {
 //   this will be as simple as storing the user ID when serializing, and finding
 //   the user by ID when deserializing.
 passport.serializeUser(function(user, done) {
+    console.log('----serializeUser----');
     done(null, user.nameID);
 });
 
 passport.deserializeUser(function(id, done) {
+    console.log('----deserializeUser----');
     findByEmail(id, function(err, user) {
         done(err, user);
     });
@@ -31,11 +33,12 @@ passport.deserializeUser(function(id, done) {
 
 passport.use(new SamlStrategy({
         issuer: config.auth.issuer,
-        path: '/login/callback',
         entryPoint: config.auth.entryPoint,
         cert: config.auth.cert
     },
     function(profile, done) {
+        console.log('----profile----');
+        console.log(JSON.stringify(profile, null, 2));
         if (!profile.nameID) {
             return done(new Error("No email found"), null);
         }
